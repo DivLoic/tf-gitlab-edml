@@ -5,7 +5,7 @@ resource "google_compute_network" "gitlab" {
 }
 
 resource "google_compute_firewall" "main-ssh-access" {
-  name    = "ssh-access"
+  name    = "gitlab-ssh-firewall"
   project = var.gcp_project
   network = google_compute_network.gitlab.name
   allow {
@@ -21,7 +21,7 @@ resource "google_compute_firewall" "main-ssh-access" {
 
 resource "google_compute_firewall" "gitlab-ssh" {
   name    = "git-client-firewall"
-  network = google_compute_subnetwork.gitlab-subnet.network
+  network = google_compute_network.gitlab.name
   allow {
     protocol = "tcp"
     ports    = ["2222"] // "9418" ?

@@ -10,7 +10,7 @@ resource "google_compute_instance" "gitlab-runner" {
   }
   tags = ["gitlab"]
   network_interface {
-    network    = google_compute_subnetwork.gitlab-subnet.network
+    network    = google_compute_network.gitlab.self_link
     subnetwork = google_compute_subnetwork.gitlab-subnet.self_link
     access_config {}
   }

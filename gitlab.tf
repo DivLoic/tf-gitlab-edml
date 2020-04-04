@@ -4,7 +4,7 @@ resource "google_compute_instance_from_template" "gitlab" {
   zone         = "europe-west2-b"
   machine_type = "n1-standard-1"
   network_interface {
-    network    = google_compute_subnetwork.gitlab-subnet.network
+    network    = google_compute_network.gitlab.self_link
     subnetwork = google_compute_subnetwork.gitlab-subnet.self_link
     access_config {
       nat_ip = data.google_compute_address.gitlab-scm-ip.address
@@ -88,7 +88,7 @@ resource "google_compute_global_forwarding_rule" "gitlab" {
 resource "google_compute_firewall" "gitlab" {
 
   name    = "gitlab-firewall"
-  network = google_compute_subnetwork.gitlab-subnet.network
+  network = google_compute_network.gitlab.self_link
   allow {
 
     protocol = "tcp"
