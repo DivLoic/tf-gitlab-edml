@@ -18,3 +18,4 @@ EOF
 
 gitlab-runner verify
 
+sudo apt-get -y install jq

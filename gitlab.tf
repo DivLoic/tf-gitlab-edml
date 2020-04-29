@@ -1,7 +1,7 @@
 resource "google_compute_instance_from_template" "gitlab" {
 
   name         = "gitlab"
-  zone         = "europe-west2-b"
+  zone         = "europe-west1-b"
   machine_type = "n1-standard-1"
   network_interface {
     network    = google_compute_network.gitlab.self_link
@@ -11,7 +11,7 @@ resource "google_compute_instance_from_template" "gitlab" {
     }
   }
   attached_disk {
-    source      = "projects/event-driven-ml/zones/europe-west2-b/disks/gitlab-disk"
+    source      = "projects/event-driven-ml/zones/europe-west1-b/disks/gitlab-disk"
     mode        = "READ_WRITE"
     device_name = "gitlab-disk"
   }
@@ -21,7 +21,7 @@ resource "google_compute_instance_from_template" "gitlab" {
 }
 resource "google_compute_instance_group" "gitlab" {
   name = "gitlab-group"
-  zone = "europe-west2-b"
+  zone = "europe-west1-b"
   instances = [
     "${google_compute_instance_from_template.gitlab.self_link}"
   ]

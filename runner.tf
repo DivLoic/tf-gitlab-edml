@@ -1,7 +1,7 @@
 resource "google_compute_instance" "gitlab-runner" {
 
   name                      = "gitlab-runner"
-  zone                      = "europe-west2-b"
+  zone                      = "europe-west1-b"
   machine_type              = "n1-standard-2"
   allow_stopping_for_update = true
   metadata_startup_script   = data.template_file.gitlab-runner-startup.rendered
