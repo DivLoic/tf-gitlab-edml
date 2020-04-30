@@ -20,4 +20,8 @@ resource "google_compute_instance" "gitlab-runner" {
       image = "ubuntu-1804-bionic-v20191002"
     }
   }
+
+  metadata = {
+    shutdown-script = data.template_file.gitlab-runner-shutdown.rendered
+  }
 }

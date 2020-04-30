@@ -45,6 +45,13 @@ data "template_file" "gitlab-runner-config" {
   template = file("${path.module}/resources/config.toml")
 }
 
+data "template_file" "gitlab-runner-shutdown" {
+  template = file("${path.module}/resources/gitlab-runner-shutdown.sh")
+  vars = {
+    JSON_KEY_ID = "$${JSON_KEY_ID}"
+  }
+}
+
 data "template_file" "gitlab-runner-startup" {
   template = file("${path.module}/resources/gitlab-runner-startup.sh")
 
