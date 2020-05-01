@@ -3,6 +3,13 @@ resource "google_compute_network" "gitlab" {
   project                 = var.gcp_project
   auto_create_subnetworks = false
 }
+resource "google_compute_subnetwork" "gitlab-subnet" {
+  network       = google_compute_network.gitlab.name
+  name          = "gitlab-subnet"
+  project       = var.gcp_project
+  region        = var.gcp_region
+  ip_cidr_range = "10.0.4.0/28"
+}
 
 resource "google_compute_firewall" "main-ssh-access" {
   name    = "gitlab-ssh-firewall"
@@ -14,7 +21,7 @@ resource "google_compute_firewall" "main-ssh-access" {
   }
   source_ranges = ["0.0.0.0/0"]
   target_tags = [
-    //"gitlab"
+    "gitlab"
     //"gitlab-runner"
   ]
 }
@@ -27,13 +34,7 @@ resource "google_compute_firewall" "gitlab-ssh" {
     ports    = ["2222"] // "9418" ?
   }
   source_ranges = ["0.0.0.0/0"]
-  target_tags   = ["gitlab"]
-}
-
-resource "google_compute_subnetwork" "gitlab-subnet" {
-  network       = google_compute_network.gitlab.name
-  name          = "gitlab-subnet"
-  project       = var.gcp_project
-  region        = var.gcp_region
-  ip_cidr_range = "10.0.4.0/28"
+  target_tags   = [
+    // "gitlab"
+  ]
 }

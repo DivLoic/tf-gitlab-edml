@@ -8,7 +8,9 @@ resource "google_compute_instance" "gitlab-runner" {
   service_account {
     scopes = ["cloud-platform"]
   }
-  tags = ["gitlab"]
+
+  tags = ["gitlab-runner"]
+
   network_interface {
     network    = google_compute_network.gitlab.self_link
     subnetwork = google_compute_subnetwork.gitlab-subnet.self_link
