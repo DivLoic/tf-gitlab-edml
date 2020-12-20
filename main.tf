@@ -4,10 +4,3 @@ provider "google" {
   region       = var.gcp_region
   access_token = data.google_service_account_access_token.default.access_token
 }
-
-terraform {
-  backend "gcs" {
-    bucket  = "edml"
-    prefix  = "/metadata/gitlab"
-  }
-}

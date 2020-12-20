@@ -9,6 +9,7 @@ resource "google_compute_subnetwork" "gitlab-subnet" {
   project       = var.gcp_project
   region        = var.gcp_region
   ip_cidr_range = "10.0.4.0/28"
+  // TODO: set this correctly
 }
 
 resource "google_compute_firewall" "main-ssh-access" {
