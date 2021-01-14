@@ -1,39 +1,63 @@
-resource "google_compute_instance_from_template" "gitlab" {
+resource "google_compute_instance" "gitlab" {
+  name                      = "gitlab"
+  zone                      = var.gcp_zone
+  machine_type              = "n1-standard-2"
+  project                   = var.gcp_project
+  allow_stopping_for_update = true
+  // TODO: cut map ssh deamon to 2222, dl bucket content
+  metadata_startup_script   = data.template_file.gitlab-server-startup.rendered
 
-  name         = "gitlab"
-  zone         = "europe-west1-b"
-  machine_type = "n1-standard-1"
+  // TODO: Remove the http server mention
+  tags = ["gitlab", "http-server"]
+
+  metadata = {
+    gce-container-declaration = module.gitlab_container_config.metadata_value
+  }
+
+  labels = {
+    container-vm = module.gitlab_container_config.vm_container_label
+  }
+
+  service_account {
+    scopes = ["cloud-platform"]
+  }
+
   network_interface {
-    network    = google_compute_network.gitlab.self_link
+    network    = google_compute_network.gitlab.name
     subnetwork = google_compute_subnetwork.gitlab-subnet.self_link
     access_config {
-      nat_ip = data.google_compute_address.gitlab-scm-ip.address
     }
   }
-  attached_disk {
-    source      = "projects/event-driven-ml/zones/europe-west1-b/disks/gitlab-disk"
-    mode        = "READ_WRITE"
-    device_name = "gitlab-disk"
-  }
-  source_instance_template = "projects/event-driven-ml/global/instanceTemplates/gitlab-template-8"
 
-  tags = ["gitlab"]
+  attached_disk {
+    mode        = "READ_WRITE"
+    device_name = var.compute_disk
+    source      = "projects/${var.gcp_project}/zones/${var.gcp_zone}/disks/${var.compute_disk}"
+  }
+
+  boot_disk {
+
+    initialize_params {
+      type  = "pd-standard"
+      image = module.gitlab_container_config.source_image
+    }
+  }
 }
+
 resource "google_compute_instance_group" "gitlab" {
   name = "gitlab-group"
   zone = "europe-west1-b"
   instances = [
-    "${google_compute_instance_from_template.gitlab.self_link}"
+    google_compute_instance.gitlab.self_link
   ]
 
-  # startup script
-  # sudo mkdir -p /mnt/disks/gitlab-disk
-  # sudo chmod a+w /mnt/disks/gitlab-disk
-  # sudo mkfs.ext4 -m 0 -F -E lazy_itable_init=0,lazy_journal_init=0,discard /dev/sdb
-  # sudo mount -o discard,defaults /dev/sdb /mnt/disks/gitlab-disk
+  named_port {
+    name = "http"
+    port = 80
+  }
 }
 
-resource "google_compute_health_check" "gitlab" {
+/*resource "google_compute_health_check" "gitlab" {
   name = "gitlab-http-health-check"
 
   healthy_threshold   = 1
@@ -68,7 +92,10 @@ resource "google_compute_url_map" "gitlab" {
   default_service = google_compute_backend_service.gitlab.self_link
 }
 
+
 resource "google_compute_target_https_proxy" "gitlab" {
+  //count = var.secure ? 1 : 0
+
   name    = "gitlab-http-proxy"
   url_map = google_compute_url_map.gitlab.self_link
 
@@ -78,6 +105,7 @@ resource "google_compute_target_https_proxy" "gitlab" {
 }
 
 resource "google_compute_global_forwarding_rule" "gitlab" {
+  //count = var.secure ? 1 : 0
 
   name       = "gitlab-frontend"
   port_range = "443"
@@ -99,4 +127,4 @@ resource "google_compute_firewall" "gitlab" {
   data.google_compute_lb_ip_ranges.ranges.http_ssl_tcp_internal,
   [google_compute_subnetwork.gitlab-subnet.ip_cidr_range]
   )
-}
+}*/

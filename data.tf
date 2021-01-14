@@ -1,3 +1,4 @@
+# service account token generation
 provider "google" {
   alias = "token-access"
   scopes = [
@@ -35,6 +36,7 @@ data "google_compute_address" "gitlab-scm-ip" {
   name = "gitlab-scm-ip"
 }*/
 
+# available load balancer ip addresses
 data "google_compute_lb_ip_ranges" "ranges" {}
 
 data "template_file" "gitlab-runner-config" {
@@ -60,4 +62,9 @@ data "template_file" "gitlab-runner-startup" {
     # ACCESS_KEY = data.template_file.access-key.rendered
     RUNNER_CONFIG = data.template_file.gitlab-runner-config.rendered
   }
+}
+
+
+data "template_file" "gitlab-server-startup" {
+  template = file("${path.module}/resources/gitlab-server-startup.sh")
 }

@@ -1,3 +1,4 @@
+/*
 resource "google_compute_instance" "gitlab-runner" {
 
   name                      = "gitlab-runner"
@@ -26,4 +27,4 @@ resource "google_compute_instance" "gitlab-runner" {
   metadata = {
     shutdown-script = data.template_file.gitlab-runner-shutdown.rendered
   }
-}
+}*/
