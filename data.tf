@@ -23,23 +23,24 @@ data "google_service_account_access_token" "default" {
   lifetime = "3000s"
 }
 
-// TODO: setup certificates and ip addresses
-/*data "google_compute_ssl_certificate" "gitlab-cert" {
-  name = "gitlab-cert"
-}
-
 data "google_compute_global_address" "gitlab-ip" {
+  count = var.secure ? 1 : 0
   name = "gitlab-ip"
 }
 
 data "google_compute_address" "gitlab-scm-ip" {
+  count = var.secure ? 1 : 0
   name = "gitlab-scm-ip"
-}*/
+}
 
 # available load balancer ip addresses
 data "google_compute_lb_ip_ranges" "ranges" {}
 
-data "template_file" "gitlab-runner-config" {
+data "template_file" "gitlab-server-startup" {
+  template = file("${path.module}/resources/gitlab-server-startup.sh")
+}
+
+/*data "template_file" "gitlab-runner-config" {
   template = file("${path.module}/resources/config.toml")
 }
 
@@ -62,9 +63,11 @@ data "template_file" "gitlab-runner-startup" {
     # ACCESS_KEY = data.template_file.access-key.rendered
     RUNNER_CONFIG = data.template_file.gitlab-runner-config.rendered
   }
-}
+}*/
 
 
-data "template_file" "gitlab-server-startup" {
-  template = file("${path.module}/resources/gitlab-server-startup.sh")
+// TODO: setup certificates and ip addresses
+data "google_compute_ssl_certificate" "gitlab-cert" {
+  count = var.secure ? 1 : 0
+  name = "gitlab-cert"
 }

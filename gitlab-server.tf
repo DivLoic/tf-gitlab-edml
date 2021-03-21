@@ -4,11 +4,9 @@ resource "google_compute_instance" "gitlab" {
   machine_type              = "n1-standard-2"
   project                   = var.gcp_project
   allow_stopping_for_update = true
-  // TODO: cut map ssh deamon to 2222, dl bucket content
   metadata_startup_script   = data.template_file.gitlab-server-startup.rendered
 
-  // TODO: Remove the http server mention
-  tags = ["gitlab", "http-server"]
+  tags = ["gitlab"]
 
   metadata = {
     gce-container-declaration = module.gitlab_container_config.metadata_value
@@ -26,6 +24,7 @@ resource "google_compute_instance" "gitlab" {
     network    = google_compute_network.gitlab.name
     subnetwork = google_compute_subnetwork.gitlab-subnet.self_link
     access_config {
+      network_tier = "STANDARD"
     }
   }
 
@@ -57,7 +56,7 @@ resource "google_compute_instance_group" "gitlab" {
   }
 }
 
-/*resource "google_compute_health_check" "gitlab" {
+resource "google_compute_health_check" "gitlab" {
   name = "gitlab-http-health-check"
 
   healthy_threshold   = 1
@@ -68,7 +67,7 @@ resource "google_compute_instance_group" "gitlab" {
 
   http_health_check {
     port         = "80"
-    request_path = "/users/sign_in/"
+    request_path = "/help/"
   }
 }
 
@@ -92,27 +91,6 @@ resource "google_compute_url_map" "gitlab" {
   default_service = google_compute_backend_service.gitlab.self_link
 }
 
-
-resource "google_compute_target_https_proxy" "gitlab" {
-  //count = var.secure ? 1 : 0
-
-  name    = "gitlab-http-proxy"
-  url_map = google_compute_url_map.gitlab.self_link
-
-  ssl_certificates = [
-    data.google_compute_ssl_certificate.gitlab-cert.self_link
-  ]
-}
-
-resource "google_compute_global_forwarding_rule" "gitlab" {
-  //count = var.secure ? 1 : 0
-
-  name       = "gitlab-frontend"
-  port_range = "443"
-  target     = google_compute_target_https_proxy.gitlab.self_link
-  ip_address = data.google_compute_global_address.gitlab-ip.self_link
-}
-
 resource "google_compute_firewall" "gitlab" {
 
   name    = "gitlab-firewall"
@@ -127,4 +105,32 @@ resource "google_compute_firewall" "gitlab" {
   data.google_compute_lb_ip_ranges.ranges.http_ssl_tcp_internal,
   [google_compute_subnetwork.gitlab-subnet.ip_cidr_range]
   )
-}*/
+}
+
+resource "google_compute_target_http_proxy" "gitlab" {
+  count = var.secure ? 0 : 1
+
+  name = "gitlab-https-proxy"
+  url_map = google_compute_url_map.gitlab.self_link
+}
+
+resource "google_compute_target_https_proxy" "gitlab" {
+  count = var.secure ? 1 : 0
+
+  name    = "gitlab-https-proxy"
+  url_map = google_compute_url_map.gitlab.self_link
+
+  ssl_certificates = [
+    data.google_compute_ssl_certificate.gitlab-cert[0].self_link
+  ]
+}
+
+resource "google_compute_global_forwarding_rule" "gitlab" {
+
+  name       = "gitlab-frontend"
+  port_range = var.secure ? "443" : "80"
+  target = (var.secure ?
+  google_compute_target_https_proxy.gitlab[0].self_link :
+  google_compute_target_http_proxy.gitlab[0].self_link)
+  ip_address = (var.secure ? data.google_compute_global_address.gitlab-ip[0].self_link: null)
+}

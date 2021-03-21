@@ -18,11 +18,10 @@ resource "google_compute_firewall" "main-ssh-access" {
   network = google_compute_network.gitlab.name
   allow {
     protocol = "tcp"
-    ports    = ["22", "80"]
+    ports    = ["22"]
   }
   source_ranges = ["0.0.0.0/0"]
   target_tags = [
-    "gitlab"
     //"gitlab-runner"
   ]
 }
